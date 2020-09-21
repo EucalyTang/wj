@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class AdminMenuService {
@@ -30,7 +31,7 @@ public class AdminMenuService {
 
     public List<AdminMenu> getMenusByCurrentUser() {
         String username = SecurityUtils.getSubject().getPrincipal().toString();
-        User user = userService.getByUserName(username);
+        User user = userService.findByUsername(username);
         List<AdminUserRole> userRoleList = adminUserRoleService.listAllByUid(user.getId());
         List<AdminMenu> menus = new ArrayList<>();
         for (AdminUserRole userRole : userRoleList) {
@@ -44,7 +45,6 @@ public class AdminMenuService {
                         isExist = true;
                     }
                 }
-
                 if (!isExist) {
                     menus.add(menu);
                 }
@@ -55,25 +55,35 @@ public class AdminMenuService {
     }
 
     public void handleMenus(List<AdminMenu> menus) {
-        for (AdminMenu menu : menus) {
-            menu.setChildren(getAllByParentId(menu.getId()));
-        }
+//        for (AdminMenu menu : menus) {
+//            menu.setChildren(getAllByParentId(menu.getId()));
+//        }
+//
+//        Iterator<AdminMenu> iterator = menus.iterator();
+//        while (iterator.hasNext()) {
+//            AdminMenu menu = iterator.next();
+//            if (menu.getParentId() != 0) {
+//                iterator.remove();
+//            }
+//        }
+        menus.forEach(m -> {
+            List<AdminMenu> children = getAllByParentId(m.getId());
+            m.setChildren(children);
+        });
 
-        Iterator<AdminMenu> iterator = menus.iterator();
-        while (iterator.hasNext()) {
-            AdminMenu menu = iterator.next();
-            if (menu.getParentId() != 0) {
-                iterator.remove();
-            }
-        }
+        menus.removeIf(m -> m.getParentId() != 0);
     }
 
     public List<AdminMenu> getMenusByRoleId(int rid) {
-        List<AdminMenu> menus = new ArrayList<>();
-        List<AdminRoleMenu> rms = adminRoleMenuService.findAllByRid(rid);
-        for (AdminRoleMenu rm : rms) {
-            menus.add(adminMenuDAO.findById(rm.getMid()));
-        }
+//        List<AdminMenu> menus = new ArrayList<>();
+//        List<AdminRoleMenu> rms = adminRoleMenuService.findAllByRid(rid);
+//        for (AdminRoleMenu rm : rms) {
+//            menus.add(adminMenuDAO.findById(rm.getMid()));
+//        }
+        List<Integer> menuIds = adminRoleMenuService.findAllByRid(rid)
+                .stream().map(AdminRoleMenu::getMid).collect(Collectors.toList());
+        List<AdminMenu> menus = adminMenuDAO.findAllById(menuIds);
+
         handleMenus(menus);
         return menus;
     }

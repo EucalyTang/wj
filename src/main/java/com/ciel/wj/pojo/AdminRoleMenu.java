@@ -1,41 +1,21 @@
 package com.ciel.wj.pojo;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import lombok.Data;
+import lombok.ToString;
 
 import javax.persistence.*;
 
+@Data
 @Entity
 @Table(name = "admin_role_menu")
+@ToString
 @JsonIgnoreProperties({"handler","hibernateLazyInitialier"})
 public class AdminRoleMenu {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
-    int id;
-    int rid;
-    int mid;
-
-    public void setId(int id) {
-        this.id = id;
-    }
-
-    public void setRid(int rid) {
-        this.rid = rid;
-    }
-
-    public void setMid(int mid) {
-        this.mid = mid;
-    }
-
-    public int getId() {
-        return id;
-    }
-
-    public int getRid() {
-        return rid;
-    }
-
-    public int getMid() {
-        return mid;
-    }
+    private int id;
+    private int rid;
+    private int mid;
 }

@@ -9,6 +9,8 @@ import java.util.List;
 public interface UserDAO extends JpaRepository<User,Integer>{
     User findByUsername(String username);
     User getByUsernameAndPassword(String username, String password);
-    @Query(value = "select new User(u.id, u.username, u.name, u.phone, u.email, u.enabled) from User u")
-    List<User> list();
+    User findById(int id);
+    //@Query(value = "select new User(u.id, u.username, u.name, u.phone, u.email, u.inviteCode, u.enabled) from User u")
+    //@Query(value = "select id,username,password,salt from User",nativeQuery = true)
+    //List<User> list();
 }

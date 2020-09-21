@@ -1,10 +1,13 @@
 package com.ciel.wj.controller;
 
+import com.ciel.wj.config.Log;
 import com.ciel.wj.pojo.User;
 import com.ciel.wj.result.Result;
 import com.ciel.wj.result.ResultFactory;
 import com.ciel.wj.service.UserService;
 import org.apache.shiro.SecurityUtils;
+import org.apache.shiro.authc.IncorrectCredentialsException;
+import org.apache.shiro.authc.UnknownAccountException;
 import org.apache.shiro.authc.UsernamePasswordToken;
 import org.apache.shiro.crypto.SecureRandomNumberGenerator;
 import org.apache.shiro.crypto.hash.SimpleHash;
@@ -22,19 +25,27 @@ public class LoginController {
 
     @PostMapping(value = "api/login")
     @ResponseBody
+    @Log("登录系统")
     public Result login(@RequestBody User requestUser) {
         // 对 html 标签进行转义，防止 XSS 攻击
         String username = requestUser.getUsername();
+        username = HtmlUtils.htmlEscape(username);
         Subject subject = SecurityUtils.getSubject();
         //subject.getSession().setTimeout(10000);
         UsernamePasswordToken usernamePasswordToken = new UsernamePasswordToken(username,requestUser.getPassword());
         usernamePasswordToken.setRememberMe(true);
         try {
             subject.login(usernamePasswordToken);
-            return ResultFactory.buildSuccessResult(usernamePasswordToken);
-        } catch (ArithmeticException e) {
+            User user = userService.findByUsername(username);
+            if (!user.isEnabled()) {
+                return ResultFactory.buildFailResult("该用户已被禁用");
+            }
+            return ResultFactory.buildSuccessResult(username);
+        } catch (IncorrectCredentialsException e) {
             String message = "账号密码错误";
             return ResultFactory.buildFailResult(message);
+        } catch (UnknownAccountException e) {
+            return ResultFactory.buildFailResult("账号不存在");
         }
     }
 
@@ -68,6 +79,7 @@ public class LoginController {
 
     @ResponseBody
     @GetMapping("api/logout")
+    @Log("登出系统")
     public Result logout() {
         Subject subject = SecurityUtils.getSubject();
         subject.logout();
